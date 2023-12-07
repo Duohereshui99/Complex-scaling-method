@@ -2,6 +2,7 @@ ccccccc
         module potentialfunctions
           use parameter
             contains
+!!gauss potential function
             complex*16 function gausspot(r,v0,r0,a0)
                 implicit none
                  real*8::v0,r0,a0

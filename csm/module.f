@@ -22,7 +22,7 @@ ccccccc
             !n_basis ranges from 0 to ...
         end module
 ccccccc
-        module potential
+        module potential            !potential parameters
             implicit none
             real*8::v0 
             real*8::r0 

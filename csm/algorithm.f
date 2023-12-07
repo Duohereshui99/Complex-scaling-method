@@ -1,12 +1,9 @@
-!求导插值积分等算法
 ccccccc
       module algorithm
         contains
-ccccccc
-! interpolation function for uniform grids 
-!Y:求第Y个格点处的函数值,一般是小数,
-!F:函数值数列, N:有N个格点
-!该函数是直接copy的
+!interpolation function for uniform grids (real functions)
+!Y: value of function's index Y  
+!F: function value array, size of the array
       function FFR4(Y,F,N)
       IMPLICIT REAL*8(A-H,O-Z)
       REAL*8 F(N),P,P1,P2,Q,X,FFR4
@@ -35,13 +32,8 @@ ccccccc
       RETURN
       end function
 ccccccccccccccccccccccccccccccccccccccccccccccccccccc
-!高斯-勒让德积分。 N:积分格点数； x1,x2:积分下上限    
-!输出x,w:格点位置和权重。
-!gauleg相当于只对自变量区间作用,做一个重新离散化
-!gauleg的核心是将这个新离散化的自变量数组给一组新的权重
-!用这个新给的权重计算更稳定,这是重排的原因
-!这个权重相当于dx(n)
-!该函数是copy的
+!gauss-legendre integral,   N:number of intergal index， x1,x2:intergal range   
+!x,w:gauss position rr and corresponding weight rrw  similar to dx(n)
 ccccccccccccccccccccccccccccccccccccccccccccccccccccc
       SUBROUTINE gauleg(N,x1,x2,X,W)
         IMPLICIT NONE
@@ -80,13 +72,12 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccc
  10     CONTINUE
         END SUBROUTINE gauleg
 cccccccccccccccccccccccccccccccccccccccccccccccccccccc
-! 下面算二阶导数用了一个简单的五点差分
-! 形式选取了subroutine的形式
-! 其输入值依次为:函数（值）数组y,
-! 以及计划输出的二阶导数数组d2y,
-! 数组的size,n；以及步长dx（这里是均匀步长）
-! 其中只有d2y是一个空的数组用来往里面填写并输出 
-!!修改为complex类型 
+! five points derivative formula for second derivative
+! y: function value array
+! d2y: second derivative array
+! n:size of the array
+! uniform grid 
+!!complex type 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccc
        subroutine second_derivative(y,d2y,n,dx)
        implicit none
@@ -110,8 +101,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccc
        end do
        end subroutine second_derivative
 ccccccc
-
-
 c *** Calculate d^2u(r)/dr^2 using five points derivative formula
 c     f(ndim)=function to make derivative
 c     h      =step

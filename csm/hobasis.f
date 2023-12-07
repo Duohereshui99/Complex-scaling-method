@@ -18,8 +18,8 @@
       !   endif
             end function
 !!hobasis
-            complex*16 function ho3d(n,l,nu,r)            !!标准形式的三维BASIS
-            implicit none                           !!修改后的nu取mu*omega/(2hbar)
+            complex*16 function ho3d(n,l,nu,r)            !!3d hobasis
+            implicit none                           !!nu=mu*omega/(2hbar)
             integer l,n
             real*8::norma,nu
             complex*16::r
@@ -39,7 +39,7 @@
                   fact=dgamma(x)
             end function fact
 !!double fact
-      real*8 function doublefact(n)!双阶乘
+      real*8 function doublefact(n)       !double factorial
             implicit none
             integer::n,i
             real::s
