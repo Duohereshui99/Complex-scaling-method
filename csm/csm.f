@@ -134,7 +134,7 @@ ccccccc
 ccccccc
          write(*,*) 'theta=',theta,'degree'
          do i=0,n_basis                 !!theta>-(1/2)arg(E)
-            if(theta*pi/180d0>-atan2(aimag(w(i)),real(w(i)))/2d0.and.aimag(w(i))<0.and.real(w(i)).gt.0)  then 
+            if(theta*pi/180d0*0.9d0>-atan2(aimag(w(i)),real(w(i)))/2d0.and.aimag(w(i))<0.and.real(w(i)).gt.0)  then 
                 write(*,*) 'Er=',real(w(i)),aimag(w(i)),'i',
      &            'Gamma=',-2*aimag(w(i)),'MeV',
      &            't_half=',hbarc*log(2d0)/(-2*aimag(w(i)))*ratio,'s'
