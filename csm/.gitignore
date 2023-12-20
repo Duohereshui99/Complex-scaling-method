@@ -1,0 +1,9 @@
+dump
+fort.*
+*.o
+*.mod
+*.in
+csm
+
+
+
