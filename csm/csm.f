@@ -24,22 +24,7 @@ ccccccc
             namelist /pots/ v0,r0,a0
             namelist /cplxscaling/ theta
 ccccccc
-            ! 使用预处理器检查宏是否被定义
-#ifdef BASE
-        print *, 'Base directory: ', BASE
-#endif
-
-#ifdef VERDATE
-        print *, 'Version date: ', VERDATE
-#endif
-
-#ifdef VERREV
-        print *, 'Version revision: ', VERREV
-#endif
-
-#ifdef COMPDATE
-        print *, 'Compilation date: ', COMPDATE
-#endif
+            call get_info()
             call cpu_time(t1)
 ccccccc
             open(777,file='test.in')
@@ -235,4 +220,25 @@ ccccccc
 ccccccc            
             call cpu_time(t2)
             write(*,*) 'running time=',t2-t1
+
+         contains
+            subroutine get_info()
+            ! 使用预处理器检查宏是否被定义
+#ifdef BASE
+        print *, 'Base directory: ', BASE
+#endif
+
+#ifdef VERDATE
+        print *, 'Version date: ', VERDATE
+#endif
+
+#ifdef VERREV
+        print *, 'Version revision: ', VERREV
+#endif
+
+#ifdef COMPDATE
+        print *, 'Compilation date: ', COMPDATE
+#endif
+            end subroutine
+
         end program
