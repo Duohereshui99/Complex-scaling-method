@@ -1,13 +1,16 @@
 # 定义编译器和链接器
 FC = gfortran
 LD = $(FC)
-#定义一些git bash的shell命令变量
+# 定义一些git bash的shell命令变量
 BASE := $(shell expr $(CURDIR) : "\(.*\)/.*")
-VERDATE := $(shell git log -1 --format=%cd  )
+VERDATE := $(shell git log -1 --format="%cd" | tr -d '\n')
 VERREV := $(shell git log -1 --pretty=format:"%h")
-COMPDATE :=$(shell date)
-# 定义编译选项
-FFLAGS = -O3 -Wall -Wextra  -ffixed-line-length-0
+COMPDATE := $(shell date '+%Y-%m-%d %H:%M:%S' | tr -d '\n')
+
+# 定义编译选项，确保变量值被正确地引用
+FFLAGS = -O3 -Wall -Wextra -ffixed-line-length-0 -cpp\
+-DBASE='"$(BASE)"' -DVERDATE='"$(VERDATE)"' -DVERREV='"$(VERREV)"' -DCOMPDATE='"$(COMPDATE)"'
+
 LDFLAGS = -llapack 
 #LDFLAGS = -llapack -lgsl
 # 定义需要链接的库

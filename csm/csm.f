@@ -24,6 +24,22 @@ ccccccc
             namelist /pots/ v0,r0,a0
             namelist /cplxscaling/ theta
 ccccccc
+            ! 使用预处理器检查宏是否被定义
+#ifdef BASE
+        print *, 'Base directory: ', BASE
+#endif
+
+#ifdef VERDATE
+        print *, 'Version date: ', VERDATE
+#endif
+
+#ifdef VERREV
+        print *, 'Version revision: ', VERREV
+#endif
+
+#ifdef COMPDATE
+        print *, 'Compilation date: ', COMPDATE
+#endif
             call cpu_time(t1)
 ccccccc
             open(777,file='test.in')
@@ -34,73 +50,78 @@ ccccccc
             read(777,nml=cplxscaling)
             close(777)
 ccccccc
-            allocate(r(1:n_diff))           !!complex uniformed coordinate r
+            allocate(r(1:n_diff))               !!complex uniformed coordinate r
             allocate(rr(1:n_int))          
             allocate(rrw(1:n_int))      
-            allocate(rc(1:n_int))           !!complex gauss coordinate rc
+            allocate(rc(1:n_int))               !!complex gauss coordinate rc
 ccccccc
             allocate(vpot1(1:n_diff))
             allocate(vpot(1:n_int))             !!complex v
             allocate(H(0:n_basis,0:n_basis))    !!complex H
             allocate(w(0:n_basis))              !!complex eigenvalue
-            allocate(vl(0:n_basis,0:n_basis))    !!complex eigenvector
-            allocate(vr(0:n_basis,0:n_basis))    !!complex eigenvector
+            allocate(vl(0:n_basis,0:n_basis))   !!complex eigenvector
+            allocate(vr(0:n_basis,0:n_basis))   !!complex eigenvector
 ccccccc
             allocate(psi1(1:n_diff),d2psi1(1:n_diff)) 
             allocate(psi(1:n_int,0:n_basis),d2psi(1:n_int,0:n_basis))
-            allocate(wf(1:n_int))
+            allocate(wf(1:n_int,0:n_basis))
 !! n column
+ccccccc
+            allocate(wavefunction(1:n_int))
+            allocate(wf1(1:n_diff))
+            allocate(d2wf1(1:n_diff))
+            allocate(d2wf(1:n_int))
 ccccccc
             mu=amu*mass_1*mass_2/(mass_1+mass_2)
             z12=z1*z2
             alpha=1d0/2d0/b**2
 ccccccc
-            write(*,*) 'omega=',hbarc/mu/b**2
-            write(*,*) 'nbasis=',n_basis
+ 77         format(A,F15.7)
+ 777        format(A,I3)
+            write(*,77)  'omega=',hbarc/mu/b**2
+            write(*,777) 'nbasis=',n_basis
 ccccccc
             call gauleg(n_int,0d0,hcm*n_diff,rr,rrw)     !!real rr (gauss points)
 ccccccc
-            rc=exp(ii*theta*pi/180d0)*rr                       !!rotated gauss points rc
+            rc=rr*exp(ii*theta*pi/180d0)                 !!rotated gauss points rc
 ccccccc
             do i=1,n_diff
                 r(i)=i*hcm                      
             end do
 ccccccc
-            do i=1,n_diff                       !!rotated r (uniformed mesh)
-                r(i)=exp(ii*theta*pi/180d0)*r(i)
-            end do
+            r=r*exp(ii*theta*pi/180d0)                  !!rotated r (uniformed mesh) 
 ccccccc
             do i=1,n_diff
-                vpot1(i)=gausspot(r(i),v0,r0,a0)!vpots(v0,a0,r0,z12,mu,l,r(i))!gausspot(r(i),v0,r0,a0)        !!rotated V
+                vpot1(i)=gausspot(r(i),v0,r0,a0)!potencc(r(i))!gausspot(r(i),v0,r0,a0)        !!rotated V
             end do
 ccccccc
             do i=1,n_int
-                vpot(i)=FFC(abs(rc(i))/hcm,vpot1,n_diff)
-                ! write(18,*) real(rc(i)),real(gausspot(rc(i),v0,r0,a0))
+                vpot(i)=FFC(rr(i)/hcm,vpot1,n_diff)
             end do
-ccccccc
-
-
 ccccccc
         do i=0,n_basis
-            do j=1,n_diff
-                s=j*hcm!*exp(ii*theta*pi/180d0)                  !!complex rotated
+            do j=1,n_diff           !!real basis, not rotated!
+                s=j*hcm   
                 psi1(j)=THOFUNC(i,L,alpha,gamma,m,s)*s
             end do
-            call second_derivative(psi1,d2psi1,n_diff,hcm*exp(ii*theta*pi/180d0))
+            call second_derivative(psi1,d2psi1,n_diff,hcm*exp(ii*0d0))
             do j=1,n_int
                 psi(j,i)=FFC(rr(j)/hcm,psi1,n_diff)
                 d2psi(j,i)=FFC(rr(j)/hcm,d2psi1,n_diff)
             end do
         end do
 ccccccc
+        do i=1,n_int
+            write(22,*) rr(i),abs(THOFUNC(10,0,alpha,gamma,m,rr(i)*exp(ii*0)))
+        end do
+ccccccc
         do i=0,n_basis              !complex H matrix
             do j=0,n_basis
                 do k=1,n_int
                     H(i,j)=H(i,j)+psi(k,i)*vpot(k)*psi(k,j)*rrw(k)      !!rotated V
-     &      +exp(-2*ii*theta*pi)*(-hbarc*hbarc/2/mu)*rrw(k)*d2psi(k,i)
+     &      +exp(-2*ii*theta*pi/180)*(-hbarc*hbarc/2/mu)*rrw(k)*d2psi(k,i)
      &        *psi(k,j)
-     &      +exp(-2*ii*theta*pi)*(hbarc*hbarc/2/mu)*(l+1d0)*l/rr(k)**2
+     &      +exp(-2*ii*theta*pi/180)*(hbarc*hbarc/2/mu)*(l+1d0)*l/rr(k)**2
      &        *rrw(k)
                 end do
             end do 
@@ -109,60 +130,108 @@ ccccccc
          do i=0,n_basis
             write(20,*) H(i,:)
          end do
-ccccccc 
-         do i=0,n_basis
-            write(24,*) i,abs(H(i,i))
-         end do
-
 ccccccc
          call ZGEEVS(n_basis+1,H,w,vl,vr)
 ccccccc
-         do i=0,n_basis   !!original complex eigenvalues with index correlated to eigenvectors
+         do i=0,n_basis     !!original complex eigenvalues with index correlated to eigenvectors
             write(21,*) w(i)
          end do
 ccccccc
-!!bubbling sort
-         do i=0,n_basis
-            do j=i+1,n_basis
-                if(real(w(j))<real(w(i))) then
-                    s=w(i)          !!sort eigenvalues
-                    w(i)=w(j)
-                    w(j)=s
-                end if
-            end do
+         do i=0,n_basis     !!ith eigenvector,jth integral point
+                do j=1,n_int
+                    do k=0,n_basis
+                        wf(j,i)=wf(j,i)+psi(j,k)*vr(k,i)
+                    end do
+                end do
          end do
 ccccccc
-         write(*,*) 'theta=',theta,'degree'
-         do i=0,n_basis                 !!theta>-(1/2)arg(E)
+         do i=1,n_int
+            write(23,*) rr(i),real(wf(i,8))
+         end do
+!! multiply by complex scaling factor exp(i\theta/2)
+         wf=exp(ii*theta*pi/360d0)*wf
+ccccccc
+!!norm of wf**2, square norm of wf
+         do i=0,n_basis
+            s=0
+            do j=1,n_int
+                s=s+wf(j,i)**2*rrw(j)
+            end do
+            wf(:,i)=wf(:,i)/sqrt(s)
+         end do
+ccccccc
+         
+ccccccc
+        !  k=8         !!justify the normalization of eigenwf
+        !  s=0
+        !  do i=1,n_int
+        !     s=s+wf(i,k)**2*rrw(i)
+        !  end do
+        !  write(*,*) 'norm=',s
+ccccccc
+         k=5  !!kth eigenvalue
+         wavefunction(:)=wf(:,k)   !!kth eigenwf
+ccccccc
+!interpolation from gauss points to uniformed mesh
+         do i=1,n_diff
+            s=i*hcm*exp(ii*0d0)
+            wf1(i)=cfival(i*hcm,rr,wavefunction,n_int,1d0)!interpolateLagrange(s,rr*exp(ii*0d0),wavefunction,n_int)
+         end do
+ccccccc
+         call second_derivative(wf1,d2wf1,n_diff,hcm*exp(ii*0d0))
+ccccccc
+         do i=1,n_int
+            d2wf(i)=FFC(rr(i)/hcm,d2wf1,n_diff)
+         end do
+ccccccc
+            s=0
+            do i=1,n_int
+                s=s+exp(-2*ii*theta*pi/180)*(-hbarc*hbarc/2/mu)*d2wf(i)*rrw(i)*wavefunction(i)
+     &     +vpot(i)*wavefunction(i)**2*rrw(i)
+     &     +exp(-2*ii*theta*pi/180)*(hbarc*hbarc/2/mu)*(l+1d0)*l/rr(i)**2*rrw(i)*wavefunction(i)**2
+            end do
+            write(*,*) 'E=',s
+!!bubbling sort
+        !  do i=0,n_basis
+        !     do j=i+1,n_basis
+        !         if(real(w(j))<real(w(i))) then
+        !             s=w(i)                          !!sort eigenvalues
+        !             w(i)=w(j)
+        !             w(j)=s
+        !         end if
+        !     end do
+        !  end do
+ccccccc
+        !  do i=1,n_int
+        !     write(22,*) rr(i),abs(wf(i,11))
+        !  end do
+ccccccc
+ 200      format('***********complex eigenvalues***********')
+ 201      format('=========================================')
+ 202      format(I3,3X,A,F15.7,1X,A,1X,F12.7,A,3X,A)
+ 203      format(A,F7.3,1X,A)
+ccccccc
+         write(*,203) 'theta=',theta,'degree'
+         write(*,200)
+         do i=0,n_basis                             !!actually theta*0.9>-(1/2)arg(E)
             if(theta*pi/180d0*0.9d0>-atan2(aimag(w(i)),real(w(i)))/2d0.and.aimag(w(i))<0.and.real(w(i)).gt.0)  then 
-                write(*,*) 'Er=',real(w(i)),aimag(w(i)),'i',
-     &            'Gamma=',-2*aimag(w(i)),'MeV',
-     &            't_half=',hbarc*log(2d0)/(-2*aimag(w(i)))*ratio,'s'
+                write(*,202) i,'Er=',real(w(i)),'+',aimag(w(i)) ,'i','resonance'
+ !    &            'Gamma=',-2*aimag(w(i)),'MeV',
+ !    &            't_half=',hbarc*log(2d0)/(-2*aimag(w(i)))*ratio,'s'
             else 
-                write(*,*) 'E=',w(i)
+                write(*,202) i,'E=',real(w(i)),'+',aimag(w(i)),'i'
             end if
          end do
+ccccccc 
+         write(*,201)
 ccccccc
-         do i=1,n_int
-            wf(i)=0d0
-            do j=0,n_basis
-                wf(i)=wf(i)+psi(i,j)*vr(j,8)
-            end do
-         end do
-ccccccc
-         do i=1,n_int
-            write(23,*) rr(i),abs(wf(i))
-         end do
-         wf=exp(ii*theta*pi/180d0)*wf
-         do i=1,n_int
-            write(22,*) rr(i),real(wf(i))
-         end do
-ccccccc
+
             deallocate(r,rc,rr,rrw)
             deallocate(vpot,vpot1)
             deallocate(H,w,vl,vr)
             deallocate(psi,psi1,d2psi,d2psi1)
             deallocate(wf)
+            deallocate(wf1,d2wf1,d2wf,wavefunction)
 ccccccc            
             call cpu_time(t2)
             write(*,*) 'running time=',t2-t1
