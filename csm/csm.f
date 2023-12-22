@@ -97,7 +97,10 @@ ccccccc
         end do
 ccccccc
         do i=1,n_int
-            write(22,*) rr(i),abs(THOFUNC(10,0,alpha,gamma,m,rr(i)*exp(ii*0)))
+            write(111,*) rr(i),abs(THOFUNC(11,0,alpha,gamma,m,rr(i)*exp(ii*0)))
+            write(112,*) rr(i),abs(THOFUNC(12,0,alpha,gamma,m,rr(i)*exp(ii*0)))
+            write(113,*) rr(i),abs(THOFUNC(13,0,alpha,gamma,m,rr(i)*exp(ii*0)))
+            write(114,*) rr(i),abs(THOFUNC(14,0,alpha,gamma,m,rr(i)*exp(ii*0)))
         end do
 ccccccc
         do i=0,n_basis              !complex H matrix
@@ -130,8 +133,11 @@ ccccccc
                 end do
          end do
 ccccccc
-         do i=1,n_int
-            write(23,*) rr(i),real(wf(i,8))
+         do i=0,n_basis
+            do j=1,n_int
+                write(41,*) rr(j),real(wf(j,i))
+            end do
+            write(41,*) '&'
          end do
 !! multiply by complex scaling factor exp(i\theta/2)
          wf=exp(ii*theta*pi/360d0)*wf
@@ -154,7 +160,7 @@ ccccccc
         !  end do
         !  write(*,*) 'norm=',s
 ccccccc
-         k=5  !!kth eigenvalue
+         k=6  !!kth eigenvalue
          wavefunction(:)=wf(:,k)   !!kth eigenwf
 ccccccc
 !interpolation from gauss points to uniformed mesh
@@ -177,15 +183,15 @@ ccccccc
             end do
             write(*,*) 'E=',s
 !!bubbling sort
-        !  do i=0,n_basis
-        !     do j=i+1,n_basis
-        !         if(real(w(j))<real(w(i))) then
-        !             s=w(i)                          !!sort eigenvalues
-        !             w(i)=w(j)
-        !             w(j)=s
-        !         end if
-        !     end do
-        !  end do
+         do i=0,n_basis
+            do j=i+1,n_basis
+                if(real(w(j))<real(w(i))) then
+                    s=w(i)                          !!sort eigenvalues
+                    w(i)=w(j)
+                    w(j)=s
+                end if
+            end do
+         end do
 ccccccc
         !  do i=1,n_int
         !     write(22,*) rr(i),abs(wf(i,11))
