@@ -18,8 +18,8 @@
       !   endif
             end function
 !!hobasis
-            complex*16 function ho3d(n,l,nu,r)            !!标准形式的三维BASIS
-            implicit none                           !!修改后的nu取mu*omega/(2hbar)
+            complex*16 function ho3d(n,l,nu,r)            !!3d hobasis
+            implicit none                           !!nu=mu*omega/(2hbar)
             integer l,n
             real*8::norma,nu
             complex*16::r
@@ -28,7 +28,7 @@
       !           write(*,*)'ho3d: Norm=0!!!for  nu,n,l',nu,n,l
       !        endif
             ho3d=norma*r**l*exp(-nu*r**2)*
-     &            general_laguerre(2*nu*r**2,n,l+0.5d0) 
+     &       generalized_laguerre(n,l+0.5d0,cmplx(2d0*nu*r**2,kind=16)) !!convert argument x into complex 16 type
             end function ho3d
 !! fact            
             function fact(n)           
@@ -39,7 +39,7 @@
                   fact=dgamma(x)
             end function fact
 !!double fact
-      real*8 function doublefact(n)!双阶乘
+      real*8 function doublefact(n)       !double factorial
             implicit none
             integer::n,i
             real::s
@@ -71,4 +71,35 @@
      &    - (k - 1 + alpha) * general_laguerre(x, k-2, alpha)) / k
       end if
       end function general_laguerre
+!!generalized_laguerre, non-recursive
+      function generalized_laguerre(n, alpha, x) result(Ln_alpha_x)
+            implicit none
+            integer, intent(in) :: n
+            real(8), intent(in) :: alpha
+            complex(16), intent(in) :: x  
+            complex(16) :: Ln_alpha_x          
+            integer :: i
+            complex(16) :: L0, L1, L2
+!initialize the first two polynomials
+            L0=1.0d0
+            L1=1.0d0+alpha-x
+ccccccc
+            if (n==0) then
+                Ln_alpha_x=L0
+                return
+            endif
+ccccccc
+            if (n==1) then
+                Ln_alpha_x=L1
+                return
+            endif
+ccccccc
+            do i=1,n-1
+                L2=((2.0d0*i+1.0d0+alpha-x)*L1-(i+alpha)*L0)/(i+1.0d0)
+                L0=L1
+                L1=L2
+            end do
+ccccccc
+            Ln_alpha_x=L2
+        end function generalized_laguerre
         end module

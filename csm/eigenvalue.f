@@ -18,7 +18,7 @@ ccccccc
             lwork=2*n
             call zgeev('N','V',n,A,lda,w,vl,ldvl,vr,ldvr,
      &       work,lwork,rwork,info)
-            write(*,*) 'info=',info
+           ! write(*,*) 'info=',info
            ! deallocate(work,rwork)
         end subroutine
 

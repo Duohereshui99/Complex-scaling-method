@@ -1,12 +1,9 @@
-!求导插值积分等算法
 ccccccc
       module algorithm
         contains
-ccccccc
-! interpolation function for uniform grids 
-!Y:求第Y个格点处的函数值,一般是小数,
-!F:函数值数列, N:有N个格点
-!该函数是直接copy的
+!interpolation function for uniform grids (real functions)
+!Y: value of function's index Y  
+!F: function value array, size of the array
       function FFR4(Y,F,N)
       IMPLICIT REAL*8(A-H,O-Z)
       REAL*8 F(N),P,P1,P2,Q,X,FFR4
@@ -35,13 +32,8 @@ ccccccc
       RETURN
       end function
 ccccccccccccccccccccccccccccccccccccccccccccccccccccc
-!高斯-勒让德积分。 N:积分格点数； x1,x2:积分下上限    
-!输出x,w:格点位置和权重。
-!gauleg相当于只对自变量区间作用,做一个重新离散化
-!gauleg的核心是将这个新离散化的自变量数组给一组新的权重
-!用这个新给的权重计算更稳定,这是重排的原因
-!这个权重相当于dx(n)
-!该函数是copy的
+!gauss-legendre integral,   N:number of intergal index， x1,x2:intergal range   
+!x,w:gauss position rr and corresponding weight rrw  similar to dx(n)
 ccccccccccccccccccccccccccccccccccccccccccccccccccccc
       SUBROUTINE gauleg(N,x1,x2,X,W)
         IMPLICIT NONE
@@ -80,13 +72,12 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccc
  10     CONTINUE
         END SUBROUTINE gauleg
 cccccccccccccccccccccccccccccccccccccccccccccccccccccc
-! 下面算二阶导数用了一个简单的五点差分
-! 形式选取了subroutine的形式
-! 其输入值依次为:函数（值）数组y,
-! 以及计划输出的二阶导数数组d2y,
-! 数组的size,n；以及步长dx（这里是均匀步长）
-! 其中只有d2y是一个空的数组用来往里面填写并输出 
-!!修改为complex类型 
+! five points derivative formula for second derivative
+! y: function value array
+! d2y: second derivative array
+! n:size of the array
+! uniform grid 
+!!complex type 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccc
        subroutine second_derivative(y,d2y,n,dx)
        implicit none
@@ -110,8 +101,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccc
        end do
        end subroutine second_derivative
 ccccccc
-
-
 c *** Calculate d^2u(r)/dr^2 using five points derivative formula
 c     f(ndim)=function to make derivative
 c     h      =step
@@ -158,5 +147,71 @@ c-----------------------------------------------------------------------
     5 FFC=F(N)
       RETURN
       END function
+ccccccc
+!Lagrange interpolation function for arbitrary grids (complex version)
+      complex*16 function interpolateLagrange(xi, x, y, n)
+                complex*16, intent(in) :: xi
+                complex*16, intent(in) :: x(:)
+                complex*16, intent(in) :: y(:)
+                integer, intent(in) :: n
+                complex*16 :: result
+                complex*16 :: term
+                integer :: i, j
 
+                result = 0.0
+
+                do i = 1, n
+                    term = y(i)
+                    do j = 1, n
+                        if (i /= j) then
+                            term = term * (xi - x(j)) / (x(i) - x(j))
+                        end if
+                    end do
+                    result = result + term
+                end do
+                interpolateLagrange= result
+            end function interpolateLagrange
+ccccccc
+!************************************************************************
+!*     REAL 4-point lagrange interpolation routine.
+!*     interpolates thr FUNCTION value fival at point r from an
+!*     array of points stored in fdis(ndm). this array is assumed
+!*     to be defined such that the first element fdis(1) CONTAINS
+!*     the FUNCTION value at r=xv(1) and xv(2 .. ndm) are monotonically
+!*     increasing.
+!************************************************************************
+      FUNCTION cfival(r,xv,fdis,ndm,alpha)
+      IMPLICIT REAL*8(A-H,O-Z)
+      COMPLEX*16 cfival,fdis(ndm),y1,y2,y3,y4
+      DIMENSION xv(ndm)
+      IF(r.GT.xv(ndm)) go to 9
+      DO 5 k=1,ndm-2
+ 5    IF(r.LT.xv(k)) go to 6
+      k=ndm-2
+ 6    nst=MAX(k-1,1)
+      x1=xv(nst)
+      x2=xv(nst+1)
+      x3=xv(nst+2)
+      x4=xv(nst+3)
+      y1=fdis(nst+0)
+      y2=fdis(nst+1)
+      y3=fdis(nst+2)
+      y4=fdis(nst+3)
+      pii1=(x1-x2)*(x1-x3)*(x1-x4)
+      pii2=(x2-x1)*(x2-x3)*(x2-x4)
+      pii3=(x3-x1)*(x3-x2)*(x3-x4)
+      pii4=(x4-x1)*(x4-x2)*(x4-x3)
+      xd1=r-x1
+      xd2=r-x2
+      xd3=r-x3
+      xd4=r-x4
+      pi1=xd2*xd3*xd4
+      pi2=xd1*xd3*xd4
+      pi3=xd1*xd2*xd4
+      pi4=xd1*xd2*xd3
+      cfival=y1*pi1/pii1+y2*pi2/pii2+y3*pi3/pii3+y4*pi4/pii4
+      RETURN
+ 9    cfival=fdis(ndm) * EXP(alpha*(xv(ndm)-r))
+      RETURN
+      END function
       end module

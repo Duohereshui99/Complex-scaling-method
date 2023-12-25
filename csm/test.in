@@ -9,7 +9,7 @@
 
 &pots     v0=-72.15d0       r0=0d0        a0=1.484d0      /
 
-&meshs    n_int=200        n_diff=4000     hcm=0.05   /
+&meshs    n_int=200        n_diff=10000     hcm=0.02   /
 
 &cplxscaling  theta=0  /      
 

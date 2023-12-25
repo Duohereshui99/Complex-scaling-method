@@ -49,13 +49,12 @@ ccccccc
 ccccccc
             allocate(psi1(1:n_diff),d2psi1(1:n_diff)) 
             allocate(psi(1:n_int,0:n_basis),d2psi(1:n_int,0:n_basis))
-            allocate(wf(1:n_int,0:n_basis))
+            allocate(psi_1(1:n_diff,0:n_basis))
+            allocate(wf(1:n_diff,0:n_basis))
 !! n column
 ccccccc
-            allocate(wavefunction(1:n_int))
-            allocate(wf1(1:n_diff))
-            allocate(d2wf1(1:n_diff))
-            allocate(d2wf(1:n_int))
+            allocate(wavefunction(1:n_diff))
+            allocate(d2wavefunction(1:n_diff))
 ccccccc
             mu=amu*mass_1*mass_2/(mass_1+mass_2)
             z12=z1*z2
@@ -89,18 +88,12 @@ ccccccc
                 s=j*hcm   
                 psi1(j)=THOFUNC(i,L,alpha,gamma,m,s)*s
             end do
+            psi_1(:,i)=psi1
             call second_derivative(psi1,d2psi1,n_diff,hcm*exp(ii*0d0))
             do j=1,n_int
                 psi(j,i)=FFC(rr(j)/hcm,psi1,n_diff)
                 d2psi(j,i)=FFC(rr(j)/hcm,d2psi1,n_diff)
             end do
-        end do
-ccccccc
-        do i=1,n_int
-            write(111,*) rr(i),abs(THOFUNC(11,0,alpha,gamma,m,rr(i)*exp(ii*0)))
-            write(112,*) rr(i),abs(THOFUNC(12,0,alpha,gamma,m,rr(i)*exp(ii*0)))
-            write(113,*) rr(i),abs(THOFUNC(13,0,alpha,gamma,m,rr(i)*exp(ii*0)))
-            write(114,*) rr(i),abs(THOFUNC(14,0,alpha,gamma,m,rr(i)*exp(ii*0)))
         end do
 ccccccc
         do i=0,n_basis              !complex H matrix
@@ -126,63 +119,49 @@ ccccccc
          end do
 ccccccc
          do i=0,n_basis     !!ith eigenvector,jth integral point
-                do j=1,n_int
+                do j=1,n_diff
                     do k=0,n_basis
-                        wf(j,i)=wf(j,i)+psi(j,k)*vr(k,i)
+                        wf(j,i)=wf(j,i)+psi_1(j,k)*vr(k,i)
                     end do
                 end do
          end do
 ccccccc
-         do i=0,n_basis
-            do j=1,n_int
-                write(41,*) rr(j),real(wf(j,i))
-            end do
-            write(41,*) '&'
-         end do
 !! multiply by complex scaling factor exp(i\theta/2)
          wf=exp(ii*theta*pi/360d0)*wf
 ccccccc
 !!norm of wf**2, square norm of wf
          do i=0,n_basis
             s=0
-            do j=1,n_int
-                s=s+wf(j,i)**2*rrw(j)
+            do j=1,n_diff
+                s=s+wf(j,i)**2*hcm
             end do
             wf(:,i)=wf(:,i)/sqrt(s)
          end do
 ccccccc
-         
-ccccccc
-        !  k=8         !!justify the normalization of eigenwf
-        !  s=0
-        !  do i=1,n_int
-        !     s=s+wf(i,k)**2*rrw(i)
-        !  end do
-        !  write(*,*) 'norm=',s
-ccccccc
-         k=6  !!kth eigenvalue
-         wavefunction(:)=wf(:,k)   !!kth eigenwf
-ccccccc
-!interpolation from gauss points to uniformed mesh
-         do i=1,n_diff
-            s=i*hcm*exp(ii*0d0)
-            wf1(i)=cfival(i*hcm,rr,wavefunction,n_int,1d0)!interpolateLagrange(s,rr*exp(ii*0d0),wavefunction,n_int)
-         end do
-ccccccc
-         call second_derivative(wf1,d2wf1,n_diff,hcm*exp(ii*0d0))
-ccccccc
-         do i=1,n_int
-            d2wf(i)=FFC(rr(i)/hcm,d2wf1,n_diff)
-         end do
-ccccccc
-            s=0
-            do i=1,n_int
-                s=s+exp(-2*ii*theta*pi/180)*(-hbarc*hbarc/2/mu)*d2wf(i)*rrw(i)*wavefunction(i)
-     &     +vpot(i)*wavefunction(i)**2*rrw(i)
-     &     +exp(-2*ii*theta*pi/180)*(hbarc*hbarc/2/mu)*(l+1d0)*l/rr(i)**2*rrw(i)*wavefunction(i)**2
-            end do
-            write(*,*) 'E=',s
 !!bubbling sort
+         do i=0,n_basis
+            do j=1,n_diff
+                write(22,*) abs(r(j)),real(wf(j,i))
+            end do
+            write(22,*) '&'
+         end do
+ccccccc
+         k=8                      !!uniformed mesh for kth's eigenwf's expectation value
+         wavefunction(:)=wf(:,k)        
+         call second_derivative(wavefunction,d2wavefunction,n_diff,hcm*exp(ii*0d0))
+         s=0
+ccccccc
+            do i=1,n_diff
+                s=s+wavefunction(i)**2*vpot1(i)*hcm      !!rotated V
+     &      +exp(-2*ii*theta*pi/180)*(-hbarc*hbarc/2/mu)*hcm*d2wavefunction(i)
+     &        *wavefunction(i)
+     &      +exp(-2*ii*theta*pi/180)*(hbarc*hbarc/2/mu)*(l+1d0)*l/abs(r(i))**2
+     &        *hcm
+            end do
+            write(*,*) 'expectation value=',s
+
+
+! !!bubbling sort
          do i=0,n_basis
             do j=i+1,n_basis
                 if(real(w(j))<real(w(i))) then
@@ -192,10 +171,6 @@ ccccccc
                 end if
             end do
          end do
-ccccccc
-        !  do i=1,n_int
-        !     write(22,*) rr(i),abs(wf(i,11))
-        !  end do
 ccccccc
  200      format('***********complex eigenvalues***********')
  201      format('=========================================')
@@ -221,13 +196,14 @@ ccccccc
             deallocate(vpot,vpot1)
             deallocate(H,w,vl,vr)
             deallocate(psi,psi1,d2psi,d2psi1)
-            deallocate(wf)
-            deallocate(wf1,d2wf1,d2wf,wavefunction)
+            deallocate(wf,psi_1)
+            deallocate(wavefunction,d2wavefunction)
 ccccccc            
             call cpu_time(t2)
             write(*,*) 'running time=',t2-t1
-
+ccccccc
          contains
+ccccccc
             subroutine get_info()
             ! 使用预处理器检查宏是否被定义
 #ifdef BASE
@@ -246,5 +222,4 @@ ccccccc
         print *, 'Compilation date: ', COMPDATE
 #endif
             end subroutine
-
         end program
