@@ -1,0 +1,25 @@
+#----------------input file for CSM----------------
+&systems    z1=1d0              z2=0d0 
+            mass_1=1.0078d0     mass_2=1.0087d0      L=0   /
+
+#---------actually nbasis=n_basis + 1-------------
+
+&lst      gamma=1.5d0           m=4d0                   
+          b=1.6d0               n_basis=14              /
+
+&pots     v0=-72.15d0       r0=0d0        a0=1.484d0      /
+
+&meshs    n_int=200        n_diff=10000     hcm=0.02   /
+
+&cplxscaling  theta=0  /      
+
+
+
+
+
+
+
+
+
+
+
