@@ -8,4 +8,5 @@ ccccccc
             real*8,parameter :: PI=acos(-1.0)
             complex*16,parameter :: ii=(0.0d0,1.0d0) !unit image num      
             real*8,parameter::ratio=3.33564095d0*1e-24 !fm to s
+            real*8,parameter:: HB2SM=41.471  ! MeV.fm^2
       end module

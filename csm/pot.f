@@ -54,10 +54,13 @@ ccccccc
         end function vpots
 ccccccc
         function potencc(r)
-      implicit none
-      complex*16,intent(in)                :: r
-      complex*16                           :: potencc
-      potencc=(-626.885D0*exp(-1.55D0*r)+1438.72d0*exp(-3.11D0*r))/r
-      !potencc=-258.7D0*exp(-(r/2.0d0)*(r/2.0d0))
-      end function
+        implicit none
+        complex*16,intent(in)                :: r
+        complex*16                           :: potencc
+
+
+        potencc=-258.7D0*exp(-(r/2.0d0)*(r/2.0d0))
+        !  potencc=-156.8D0*exp(-(r/2.0d0))
+
+        end function
         end module

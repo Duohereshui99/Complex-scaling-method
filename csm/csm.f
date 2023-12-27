@@ -27,13 +27,11 @@ ccccccc
             call get_info()
             call cpu_time(t1)
 ccccccc
-            open(777,file='test.in')
-            read(777,nml=systems)
-            read(777,nml=lst)
-            read(777,nml=pots)
-            read(777,nml=meshs)
-            read(777,nml=cplxscaling)
-            close(777)
+            read(5,nml=systems)
+            read(5,nml=lst)
+            read(5,nml=pots)
+            read(5,nml=meshs)
+            read(5,nml=cplxscaling)
 ccccccc
             allocate(r(1:n_diff))               !!complex uniformed coordinate r
             allocate(rr(1:n_int))          
@@ -100,10 +98,10 @@ ccccccc
             do j=0,n_basis
                 do k=1,n_int
                     H(i,j)=H(i,j)+psi(k,i)*vpot(k)*psi(k,j)*rrw(k)      !!rotated V
-     &      +exp(-2*ii*theta*pi/180)*(-hbarc*hbarc/2/mu)*rrw(k)*d2psi(k,i)
+     &      +exp(-2*ii*theta*pi/180)*(-hbarc**2/2/mu)*rrw(k)*d2psi(k,i)
      &        *psi(k,j)
-     &      +exp(-2*ii*theta*pi/180)*(hbarc*hbarc/2/mu)*(l+1d0)*l/rr(k)**2
-     &        *rrw(k)
+     &      +exp(-2*ii*theta*pi/180)*(hbarc**2/2/mu)*(l+1d0)*l/rr(k)**2
+     &        *rrw(k)*psi(k,i)*psi(k,j)
                 end do
             end do 
         end do
@@ -138,7 +136,6 @@ ccccccc
             wf(:,i)=wf(:,i)/sqrt(s)
          end do
 ccccccc
-!!bubbling sort
          do i=0,n_basis
             do j=1,n_diff
                 write(22,*) abs(r(j)),real(wf(j,i))
@@ -146,21 +143,24 @@ ccccccc
             write(22,*) '&'
          end do
 ccccccc
-         k=8                      !!uniformed mesh for kth's eigenwf's expectation value
-         wavefunction(:)=wf(:,k)        
-         call second_derivative(wavefunction,d2wavefunction,n_diff,hcm*exp(ii*0d0))
-         s=0
-ccccccc
-            do i=1,n_diff
-                s=s+wavefunction(i)**2*vpot1(i)*hcm      !!rotated V
-     &      +exp(-2*ii*theta*pi/180)*(-hbarc*hbarc/2/mu)*hcm*d2wavefunction(i)
-     &        *wavefunction(i)
-     &      +exp(-2*ii*theta*pi/180)*(hbarc*hbarc/2/mu)*(l+1d0)*l/abs(r(i))**2
-     &        *hcm
-            end do
-            write(*,*) 'expectation value=',s
-
-
+       !  k=14                      !!uniformed mesh for kth's eigenwf's expectation value
+!         do k=0,n_basis
+!          wavefunction(:)=wf(:,k)        
+!          call second_derivative(wavefunction,d2wavefunction,n_diff,hcm*exp(ii*0d0))
+!          s=0
+! ccccccc
+!             do i=1,n_diff
+!                 s=s+wavefunction(i)**2*vpot1(i)*hcm      !!rotated V
+!      &      +exp(-2*ii*theta*pi/180)*(-hbarc**2/2/mu)*hcm*d2wavefunction(i)
+!      &        *wavefunction(i)
+!      &      +exp(-2*ii*theta*pi/180)*(hbarc**2/2/mu)*(l+1d0)*l/abs(r(i))**2
+!      &        *hcm*wavefunction(i)**2
+!             end do
+!             write(*,*) k,'expectation value=',s
+!         end do
+!             do i=1,n_diff
+!                 write(23,*) abs(r(i)),real(wavefunction(i))
+!             end do
 ! !!bubbling sort
          do i=0,n_basis
             do j=i+1,n_basis
@@ -174,7 +174,7 @@ ccccccc
 ccccccc
  200      format('***********complex eigenvalues***********')
  201      format('=========================================')
- 202      format(I3,3X,A,F15.7,1X,A,1X,F12.7,A,3X,A)
+ 202      format(I3,3X,A,F15.7,1X,A,1X,F15.7,A,3X,A)
  203      format(A,F7.3,1X,A)
 ccccccc
          write(*,203) 'theta=',theta,'degree'
@@ -222,4 +222,5 @@ ccccccc
         print *, 'Compilation date: ', COMPDATE
 #endif
             end subroutine
+
         end program
