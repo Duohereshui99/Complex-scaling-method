@@ -17,4 +17,6 @@ ccccccc
             complex*16,allocatable::wavefunction(:) !uniformed mesh
             complex*16,allocatable::d2wavefunction(:)         !2nd derivative of wf uniform mesh
             complex*16,allocatable::psi_1(:,:)
+ccccccc
+            integer,allocatable::index(:)         !index for sort eigenvalue from small to large
         end module

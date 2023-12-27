@@ -54,6 +54,8 @@ ccccccc
             allocate(wavefunction(1:n_diff))
             allocate(d2wavefunction(1:n_diff))
 ccccccc
+            allocate(index(0:n_basis))
+ccccccc
             mu=amu*mass_1*mass_2/(mass_1+mass_2)
             z12=z1*z2
             alpha=1d0/2d0/b**2
@@ -135,17 +137,33 @@ ccccccc
             end do
             wf(:,i)=wf(:,i)/sqrt(s)
          end do
+
+
+! !!bubbling sort on index
+         do i=0,n_basis
+            index(i)=i
+         end do
+ccccccc
+         do i=0,n_basis
+            do j=i+1,n_basis
+                if(real(w(index(j)))<real(w(index(i)))) then
+                    k=index(i)                      !!sort eigenvalues
+                    index(i)=index(j)
+                    index(j)=k
+                end if
+            end do
+         end do
 ccccccc
          do i=0,n_basis
             do j=1,n_diff
-                write(22,*) abs(r(j)),real(wf(j,i))
+                write(22,*) abs(r(j)),real(wf(j,index(i)))
             end do
             write(22,*) '&'
          end do
 ccccccc
-       !  k=14                      !!uniformed mesh for kth's eigenwf's expectation value
+! !!uniformed mesh for kth's eigenwf's expectation value
 !         do k=0,n_basis
-!          wavefunction(:)=wf(:,k)        
+!          wavefunction(:)=wf(:,index(k))        
 !          call second_derivative(wavefunction,d2wavefunction,n_diff,hcm*exp(ii*0d0))
 !          s=0
 ! ccccccc
@@ -156,21 +174,8 @@ ccccccc
 !      &      +exp(-2*ii*theta*pi/180)*(hbarc**2/2/mu)*(l+1d0)*l/abs(r(i))**2
 !      &        *hcm*wavefunction(i)**2
 !             end do
-!             write(*,*) k,'expectation value=',s
+!             write(*,*) index(k),'expectation value=',s
 !         end do
-!             do i=1,n_diff
-!                 write(23,*) abs(r(i)),real(wavefunction(i))
-!             end do
-! !!bubbling sort
-         do i=0,n_basis
-            do j=i+1,n_basis
-                if(real(w(j))<real(w(i))) then
-                    s=w(i)                          !!sort eigenvalues
-                    w(i)=w(j)
-                    w(j)=s
-                end if
-            end do
-         end do
 ccccccc
  200      format('***********complex eigenvalues***********')
  201      format('=========================================')
@@ -180,23 +185,24 @@ ccccccc
          write(*,203) 'theta=',theta,'degree'
          write(*,200)
          do i=0,n_basis                             !!actually theta*0.9>-(1/2)arg(E)
-            if(theta*pi/180d0*0.9d0>-atan2(aimag(w(i)),real(w(i)))/2d0.and.aimag(w(i))<0.and.real(w(i)).gt.0)  then 
-                write(*,202) i,'Er=',real(w(i)),'+',aimag(w(i)) ,'i','resonance'
+            if(theta*pi/180d0*0.9d0>-atan2(aimag(w(index(i))),real(w(index(i))))/2d0
+     &       .and.aimag(w(index(i)))<0.and.real(w(index(i))).gt.0)  then 
+                write(*,202) i,'Er=',real(w(index(i))),'+',aimag(w(index(i))) ,'i','resonance'
  !    &            'Gamma=',-2*aimag(w(i)),'MeV',
  !    &            't_half=',hbarc*log(2d0)/(-2*aimag(w(i)))*ratio,'s'
             else 
-                write(*,202) i,'E=',real(w(i)),'+',aimag(w(i)),'i'
+                write(*,202) i,'E=',real(w(index(i))),'+',aimag(w(index(i))),'i'
             end if
          end do
 ccccccc 
          write(*,201)
 ccccccc
-
             deallocate(r,rc,rr,rrw)
             deallocate(vpot,vpot1)
             deallocate(H,w,vl,vr)
             deallocate(psi,psi1,d2psi,d2psi1)
             deallocate(wf,psi_1)
+            deallocate(index)
             deallocate(wavefunction,d2wavefunction)
 ccccccc            
             call cpu_time(t2)
